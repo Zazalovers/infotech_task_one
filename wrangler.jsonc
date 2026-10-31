@@ -9,17 +9,16 @@
   // Email worker: drain the queue every minute.
   "triggers": { "crons": ["* * * * *"] },
 
-  // Postgres (Neon, Supabase, …) reached through Hyperdrive. Not configured yet — the Worker deploys
-  // without it, but needs a database to serve requests. Create it with
-  //   npx wrangler hyperdrive create mailqueue-db --connection-string="postgres://..."
-  // then uncomment this block with the returned id (or set a DATABASE_URL secret instead).
-  // "hyperdrive": [
-  //   {
-  //     "binding": "HYPERDRIVE",
-  //     "id": "<hyperdrive-id>",
-  //     "localConnectionString": "postgres://postgres:postgres@localhost:5432/mailqueue"
-  //   }
-  // ],
+  // Postgres on Neon, reached through Hyperdrive (pooled, low-latency connections).
+  // Created with: npx wrangler hyperdrive create mailqueue-db --connection-string="postgres://..."
+  // The id is not a secret; the connection string lives only in Cloudflare.
+  "hyperdrive": [
+    {
+      "binding": "HYPERDRIVE",
+      "id": "315bacc1b1ae4dc99810d28c2c305eb8",
+      "localConnectionString": "postgres://postgres:postgres@localhost:5432/mailqueue"
+    }
+  ],
 
   // Non-secret settings. Secrets (API_KEY, RESEND_API_KEY, ASNIHER_HEARTBEAT_URL) are set with
   // `npx wrangler secret put <NAME>` and locally in .dev.vars — never here.

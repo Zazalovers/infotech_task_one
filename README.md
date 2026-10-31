@@ -6,7 +6,7 @@ A small monolithic Node.js + TypeScript backend that sends emails **through a qu
 - A **background worker** claims due jobs, sends them via **[Resend](https://resend.com)**, and records the outcome (`sent` / `failed`). Failures are **retried 3 times** with exponential backoff before a job is marked `failed`.
 - `GET /health` reports app and database status (`200` / `503`) and is monitored in production on **[Asniher](https://asniher.com)**.
 
-> Live URL: `https://<your-service>.onrender.com` (fill in after deploying, see [Deployment](#deployment))
+> **Live demo:** https://mail-queue-service.zazlovesme.workers.dev (compose page at `/`, health at [`/health`](https://mail-queue-service.zazlovesme.workers.dev/health)). Deployed on Cloudflare Workers + Neon Postgres.
 
 ---
 
@@ -248,7 +248,7 @@ Free-tier notes: free web services sleep when idle (the Asniher checks keep the 
 
 | Monitor | Type | Target |
 |---|---|---|
-| API health | HTTP(S) | `GET https://<service>.onrender.com/health`, expects `2xx`, every 1–5 min |
+| API health | HTTP(S) | `GET https://mail-queue-service.zazlovesme.workers.dev/health`, expects `2xx`, every 1–5 min |
 | Health payload | Keyword | Same URL, must contain `"database":{"status":"up"` |
 | Worker alive | Heartbeat | The worker pings `ASNIHER_HEARTBEAT_URL` at most once a minute |
 

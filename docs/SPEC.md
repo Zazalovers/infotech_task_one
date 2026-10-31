@@ -239,7 +239,7 @@ All provider errors (network, 429, 5xx, and 4xx) are retried so the "at least 3 
 
 ## 5. HTTP API
 
-Base URL: `https://<service>.onrender.com`. JSON in/out. `/emails*` requires `x-api-key: <API_KEY>` (prevents strangers from sending mail through the public deployment). `/health` is public.
+Base URL: `https://mail-queue-service.zazlovesme.workers.dev` (Cloudflare) or `https://<service>.onrender.com` (Render). JSON in/out. `/emails*` requires `x-api-key: <API_KEY>` (prevents strangers from sending mail through the public deployment). `/health` is public.
 
 ### 5.1 `POST /emails`
 
