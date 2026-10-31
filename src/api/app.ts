@@ -7,6 +7,7 @@ import { errorHandler, notFoundHandler } from './middleware/errorHandler.js';
 import { requestLogger } from './middleware/requestLogger.js';
 import { emailsRouter } from './routes/emails.routes.js';
 import { healthRouter } from './routes/health.routes.js';
+import { composePageHtml } from './ui/composePage.js';
 
 export interface AppDependencies {
   emailService: EmailService;
@@ -23,6 +24,9 @@ export function createApp({ emailService, healthService, apiKey, logger }: AppDe
   app.use(requestLogger(logger));
   app.use(express.json({ limit: '256kb' }));
 
+  app.get('/', (_req, res) => {
+    res.type('html').send(composePageHtml);
+  });
   app.use('/health', healthRouter(healthService));
   app.use('/emails', apiKeyAuth(apiKey), emailsRouter(emailService));
 

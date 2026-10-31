@@ -61,3 +61,15 @@ describe('GET /health', () => {
     await request(appWith({ ping: async () => 1 })).get('/health').expect(200);
   });
 });
+
+describe('GET /', () => {
+  it('serves the compose page', async () => {
+    const res = await request(appWith({ ping: async () => 1 }))
+      .get('/')
+      .expect(200)
+      .expect('content-type', /html/);
+    expect(res.text).toContain('id="subject"');
+    expect(res.text).toContain('id="body"');
+    expect(res.text).toContain('>Send</button>');
+  });
+});
