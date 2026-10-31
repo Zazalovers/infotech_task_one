@@ -24,7 +24,7 @@ export function buildContainer() {
     dbTimeoutMs: HEALTH_DB_TIMEOUT_MS,
   });
 
-  function buildWorker(): Worker {
+  function buildEmailProcessing() {
     if (!config.RESEND_API_KEY) {
       throw new Error('RESEND_API_KEY is required to run the worker');
     }
@@ -41,6 +41,11 @@ export function buildContainer() {
     );
     const heartbeat = config.ASNIHER_HEARTBEAT_URL ? new AsniherHeartbeat(config.ASNIHER_HEARTBEAT_URL) : null;
     const monitoring = new MonitoringService(heartbeat, config.HEARTBEAT_INTERVAL_MS, logger);
+    return { processor, monitoring };
+  }
+
+  function buildWorker(): Worker {
+    const { processor, monitoring } = buildEmailProcessing();
     return new Worker(
       processor,
       monitoring,
@@ -52,6 +57,7 @@ export function buildContainer() {
   return {
     emailService,
     healthService,
+    buildEmailProcessing,
     buildWorker,
     close: () => pool.end(),
   };

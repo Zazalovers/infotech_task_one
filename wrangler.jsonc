@@ -1,0 +1,38 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "mail-queue-service",
+  "main": "src/cloudflare/index.ts",
+  "compatibility_date": "2026-09-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "observability": { "enabled": true },
+
+  // Email worker: drain the queue every minute.
+  "triggers": { "crons": ["* * * * *"] },
+
+  // Postgres (Neon, Supabase, …) reached through Hyperdrive. Not configured yet — the Worker deploys
+  // without it, but needs a database to serve requests. Create it with
+  //   npx wrangler hyperdrive create mailqueue-db --connection-string="postgres://..."
+  // then uncomment this block with the returned id (or set a DATABASE_URL secret instead).
+  // "hyperdrive": [
+  //   {
+  //     "binding": "HYPERDRIVE",
+  //     "id": "<hyperdrive-id>",
+  //     "localConnectionString": "postgres://postgres:postgres@localhost:5432/mailqueue"
+  //   }
+  // ],
+
+  // Non-secret settings. Secrets (API_KEY, RESEND_API_KEY, ASNIHER_HEARTBEAT_URL) are set with
+  // `npx wrangler secret put <NAME>` and locally in .dev.vars — never here.
+  "vars": {
+    "NODE_ENV": "production",
+    "LOG_LEVEL": "info",
+    "EMAIL_FROM": "onboarding@resend.dev",
+    "WORKER_ENABLED": "false",
+    "WORKER_BATCH_SIZE": "10",
+    "EMAIL_MAX_ATTEMPTS": "4",
+    "EMAIL_RETRY_BASE_MS": "10000",
+    "DATABASE_SSL": "false",
+    "DATABASE_POOL_MAX": "20",
+    "DATABASE_POOL_MAX_USES": "1"
+  }
+}

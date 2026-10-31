@@ -57,7 +57,7 @@ module.exports = {
       comment: 'no HTTP framework outside src/api',
       severity: 'error',
       from: { path: '^src/', pathNot: '^src/api/' },
-      to: { path: 'node_modules/(express|pino-http)/' },
+      to: { path: 'node_modules/express/' },
     },
     {
       name: 'resend-only-in-provider',

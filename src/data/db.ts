@@ -9,6 +9,7 @@ export function createPool(): DbPool {
   const common = {
     ssl,
     max: config.DATABASE_POOL_MAX,
+    maxUses: config.DATABASE_POOL_MAX_USES ?? Infinity,
     connectionTimeoutMillis: 5000,
     idleTimeoutMillis: 30000,
   };
@@ -25,6 +26,13 @@ export function createPool(): DbPool {
       });
 
   // An idle client losing its connection must not crash the process.
-  pool.on('error', (err) => logger.error({ err }, 'postgres pool error'));
+  pool.on('error', (err) => {
+    // With single-use connections on Cloudflare Workers, pg-cloudflare reports our own close as an error.
+    if (config.DATABASE_POOL_MAX_USES === 1 && err.message.includes('socket has been closed')) {
+      logger.debug({ err }, 'postgres connection closed');
+      return;
+    }
+    logger.error({ err }, 'postgres pool error');
+  });
   return pool;
 }

@@ -1,0 +1,6 @@
+# Local secrets for `npm run cf:dev` (wrangler dev). Copy to .dev.vars — never commit .dev.vars.
+API_KEY=change-me-to-a-long-random-string
+RESEND_API_KEY=re_xxxxxxxxxxxxxxxxxxxxxxxx
+ASNIHER_HEARTBEAT_URL=
+# Used when no Hyperdrive binding is configured in wrangler.jsonc.
+DATABASE_URL=postgres://postgres:postgres@localhost:5432/mailqueue

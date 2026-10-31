@@ -4,5 +4,5 @@
     "rootDir": "."
   },
   "include": ["src", "scripts"],
-  "exclude": ["tests", "scripts/*.mjs"]
+  "exclude": ["tests", "scripts/*.mjs", "src/cloudflare"]
 }

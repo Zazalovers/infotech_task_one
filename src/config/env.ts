@@ -1,6 +1,6 @@
 import 'dotenv/config';
-import { readFileSync } from 'node:fs';
 import { z } from 'zod';
+import pkg from '../../package.json' with { type: 'json' };
 
 const bool = z.enum(['true', 'false']).transform((v) => v === 'true');
 const optionalString = z
@@ -22,6 +22,8 @@ const envSchema = z
     PGDATABASE: optionalString,
     DATABASE_SSL: bool.default(false),
     DATABASE_POOL_MAX: z.coerce.number().int().positive().default(10),
+    // 1 = never reuse a connection (needed on Cloudflare Workers, where sockets are request-scoped).
+    DATABASE_POOL_MAX_USES: z.coerce.number().int().positive().optional(),
 
     RESEND_API_KEY: optionalString,
     EMAIL_FROM: z.string().min(3).default('onboarding@resend.dev'),
@@ -49,24 +51,13 @@ const envSchema = z
 
 export type Config = z.infer<typeof envSchema> & { APP_VERSION: string };
 
-function readVersion(): string {
-  const pkgUrl = new URL('../../package.json', import.meta.url);
-  try {
-    return (JSON.parse(readFileSync(pkgUrl, 'utf8')) as { version: string }).version;
-  } catch {
-    // Compiled output lives one level deeper (dist/src/config).
-    const distPkgUrl = new URL('../../../package.json', import.meta.url);
-    return (JSON.parse(readFileSync(distPkgUrl, 'utf8')) as { version: string }).version;
-  }
-}
-
 export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
   const parsed = envSchema.safeParse(env);
   if (!parsed.success) {
     const problems = parsed.error.issues.map((i) => `  - ${i.path.join('.')}: ${i.message}`).join('\n');
     throw new Error(`Invalid environment configuration:\n${problems}`);
   }
-  return { ...parsed.data, APP_VERSION: readVersion() };
+  return { ...parsed.data, APP_VERSION: pkg.version };
 }
 
 export const config = loadConfig();
