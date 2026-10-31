@@ -1,0 +1,9 @@
+node_modules/
+dist/
+coverage/
+*.log
+
+# Secrets — only .env.example is committed
+.env
+.env.*
+!.env.example
