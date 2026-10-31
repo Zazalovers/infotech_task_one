@@ -14,6 +14,7 @@ const CRON_TIME_BUDGET_MS = 45_000;
 interface Env {
   // Optional until a hosted Postgres exists; without it, a DATABASE_URL secret is used instead.
   HYPERDRIVE?: { connectionString: string };
+  [name: string]: unknown;
 }
 
 interface ScheduledController {
@@ -21,7 +22,11 @@ interface ScheduledController {
 }
 
 async function loadApp(env: Env) {
-  // Config reads process.env when first imported, so point it at Hyperdrive before that happens.
+  // Config reads process.env when first imported, so copy the Worker's vars and secrets
+  // (string bindings) there first, and point DATABASE_URL at Hyperdrive when it is configured.
+  for (const [name, value] of Object.entries(env)) {
+    if (typeof value === 'string') process.env[name] = value;
+  }
   if (env.HYPERDRIVE) process.env.DATABASE_URL = env.HYPERDRIVE.connectionString;
 
   const [{ createApp }, { config }, { logger }, { buildContainer }, { drainQueue }] = await Promise.all([
@@ -54,7 +59,12 @@ async function loadApp(env: Env) {
 }
 
 let app: ReturnType<typeof loadApp> | undefined;
-const getApp = (env: Env) => (app ??= loadApp(env));
+// A failed start (e.g. bad config) is not cached, so the next request retries instead of failing forever.
+const getApp = (env: Env) =>
+  (app ??= loadApp(env).catch((err: unknown) => {
+    app = undefined;
+    throw err;
+  }));
 
 const http = httpServerHandler({ port: PORT });
 
