@@ -60,6 +60,14 @@ Legend: **S** ≈ < 1 h, **M** ≈ 1–3 h, **L** ≈ 3+ h.
 - [ ] **T6.6** (S) Make the DB unreachable → confirm the monitor goes down and an alert arrives → restore. (F10)
 - [ ] **T6.7** (S) Screenshots → `docs/monitoring/asniher-monitor.png` (+ dashboard and incident). — `docs: add monitoring screenshots` (F10)
 
+## Milestone 6b — Cloudflare Workers (alternative to Render)
+
+- [x] **T6b.1** Cloudflare entrypoint (`src/cloudflare/index.ts`): Express via `httpServerHandler`, cron → `drainQueue()`, lazy init. — `feat(cloudflare): add Workers entrypoint with cron-driven email worker`
+- [x] **T6b.2** `wrangler.jsonc` (Hyperdrive, cron, vars), `.dev.vars.example`, `cf:*` scripts, CI bundle check.
+- [x] **T6b.3** Verified locally with `wrangler dev`: `/health` 200/503, enqueue 202/401, cron run → retries → `failed`.
+- [ ] **T6b.4** Create Neon DB, run migrations, `wrangler hyperdrive create`, put the id in `wrangler.jsonc`, set secrets, `npm run cf:deploy`. See [DEPLOY_CLOUDFLARE.md](DEPLOY_CLOUDFLARE.md).
+- [ ] **T6b.5** Point the Asniher monitors at the `workers.dev` URL; set `ASNIHER_HEARTBEAT_URL` secret.
+
 ## Milestone 7 — Delivery
 
 - [ ] **T7.1** (M) README: overview, Mermaid diagram, setup, env table, migrations/seed, `curl` examples, deploy, live URL, monitor screenshot. — `docs: write README` (F14)

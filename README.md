@@ -93,6 +93,7 @@ npm run dev                   # API + worker on http://localhost:3000
 | `npm test` | Unit + API + integration tests (integration tests need the Docker Postgres) |
 | `npm run lint` · `lint:arch` · `typecheck` | ESLint · layer rules + SQL check · TypeScript |
 | `npm run build` · `npm start` | Compile, then migrate + start (production) |
+| `npm run cf:dev` · `cf:deploy` · `cf:tail` | Run the Worker locally · deploy to Cloudflare · stream Cloudflare logs |
 
 ---
 
@@ -109,6 +110,7 @@ All configuration comes from the environment (validated at startup in [src/confi
 | `PGHOST` `PGPORT` `PGUSER` `PGPASSWORD` `PGDATABASE` | yes* | — | Used when `DATABASE_URL` is not set |
 | `DATABASE_SSL` | no | `false` | Enable TLS to Postgres |
 | `DATABASE_POOL_MAX` | no | `10` | Pool size |
+| `DATABASE_POOL_MAX_USES` | no | unlimited | Uses per connection before it's closed (`1` on Cloudflare Workers) |
 | `RESEND_API_KEY` | for worker | — | Resend API key |
 | `EMAIL_FROM` | no | `onboarding@resend.dev` | Sender address |
 | `API_KEY` | yes | — | Shared secret required in the `x-api-key` header for `/emails*` |
@@ -212,6 +214,25 @@ HTTP/1.1 503 Service Unavailable
 
 ## Deployment
 
+Two targets are prepared. Pick one.
+
+### Option A: Cloudflare Workers
+
+The Express app runs on Workers; a **Cron Trigger** (every minute) runs the email worker; Postgres is hosted on Neon or Supabase and reached through **Hyperdrive**. Full guide: **[docs/DEPLOY_CLOUDFLARE.md](docs/DEPLOY_CLOUDFLARE.md)**.
+
+```bash
+npx wrangler login
+npx wrangler hyperdrive create mailqueue-db --connection-string="postgres://…"   # id → wrangler.jsonc
+npx wrangler secret put API_KEY
+npx wrangler secret put RESEND_API_KEY
+DATABASE_URL="postgres://…" DATABASE_SSL=true npm run migrate:up                 # once, from your machine
+npm run cf:deploy
+```
+
+Local Workers runtime: `cp .dev.vars.example .dev.vars && npm run cf:dev`.
+
+### Option B: Render
+
 The repo includes a [Render Blueprint](render.yaml): a free web service (API + in-process worker) and a free Postgres database.
 
 1. On Render: **New → Blueprint** → select this repository.
@@ -245,8 +266,9 @@ src/
   services/     business logic, retry policy, ports/ (interfaces), providers/ (Resend, Asniher)
   data/         db pool, repositories, migrator
   models/       entities and DTOs
-  worker/       poll loop
+  worker/       poll loop (Node) and one-shot drain (cron)
   config/       env validation, logger
+  cloudflare/   Cloudflare Workers entrypoint (fetch + scheduled)
   container.ts  composition root
   server.ts     API entrypoint (+ worker when WORKER_ENABLED)
   worker-main.ts  standalone worker entrypoint
